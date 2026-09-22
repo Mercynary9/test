@@ -33,6 +33,24 @@ load so the browser can fetch three.js from the CDN.
 | `P` | Pause / resume |
 | `R` | Restart the current level |
 
+### On a phone or tablet
+
+Touch controls appear automatically on any device with a coarse pointer — no
+separate build or URL.
+
+| Input | Action |
+| --- | --- |
+| Drag the **left half** of the screen | Move. The stick appears where your thumb lands and follows it if you drag past the ring, so it never runs out mid-sprint. It is analogue: a small push walks, a full push runs. |
+| Drag the **right half** | Look around |
+| **JUMP** | Jump — tap again in mid-air to double jump, hold for height |
+| **DASH** | Dash |
+| Buttons at the top right | Pause and restart |
+
+Both hands work at once: you can steer, look, and jump on the same frame.
+On touch devices the renderer also drops to a 1.5× pixel-ratio cap with no MSAA,
+halves the shadow map, and widens the field of view a little, which keeps the
+frame rate up and fits more of the platform ahead on a portrait screen.
+
 Landing on an enemy's head is a *stomp*. Anything with spikes on top hurts you
 instead, so those have to be dodged — or hit with a kicked shell.
 
@@ -74,6 +92,8 @@ Coins are optional; checkpoint rings set where you respawn after a fall.
 index.html        page shell, HUD markup, three.js import map
 styles.css        HUD and overlay styling
 src/main.js       Game class: loop, level lifecycle, contacts, camera
+src/input.js      keyboard and pointer-lock mouse
+src/touch.js      virtual stick, camera drag and on-screen buttons
 src/physics.js    AABB bodies, per-axis collision resolution, ray/ground queries
 src/player.js     movement, jumping, dashing, damage, animation
 src/enemies.js    the eight enemy types, shells and projectiles
@@ -111,3 +131,6 @@ actually care about when placing a jump.
   stay forgiving at platform edges.
 - Enemies check for ground ahead before stepping, so they patrol their platform
   instead of walking off it.
+- Keyboard and touch both produce the same `intent` shape (`forward`, `right`,
+  `jumpTapped`, `jumpHeld`, `dashTapped`, `yaw`), so `Player` has no idea which
+  one is driving it and the two can be used together.

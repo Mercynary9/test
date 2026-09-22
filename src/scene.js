@@ -1,8 +1,10 @@
 import * as THREE from 'three';
 
-export function createRenderer(canvas) {
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+export function createRenderer(canvas, { mobile = false } = {}) {
+  // Phone GPUs cannot afford MSAA at 3x device pixel ratio; the cap costs far
+  // less visually than the frame rate does.
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: !mobile, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, mobile ? 1.5 : 2));
   renderer.setSize(innerWidth, innerHeight, false);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -48,7 +50,7 @@ function createSky(palette) {
   return sky;
 }
 
-export function createScene(palette) {
+export function createScene(palette, { mobile = false } = {}) {
   const scene = new THREE.Scene();
   scene.fog = new THREE.Fog(palette.fog, 60, 220);
 
@@ -65,10 +67,10 @@ export function createScene(palette) {
   const sun = new THREE.DirectionalLight(palette.sun, 2.0);
   sun.position.set(24, 42, 18);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.mapSize.set(mobile ? 1024 : 2048, mobile ? 1024 : 2048);
   sun.shadow.camera.near = 1;
   sun.shadow.camera.far = 160;
-  const s = 60;
+  const s = mobile ? 42 : 60; // tighter frustum keeps 1024px shadows crisp
   sun.shadow.camera.left = -s;
   sun.shadow.camera.right = s;
   sun.shadow.camera.top = s;
@@ -78,7 +80,8 @@ export function createScene(palette) {
   scene.add(sun);
   scene.add(sun.target);
 
-  const camera = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, 0.1, 500);
+  // a taller field of view on portrait phones keeps the platform ahead in frame
+  const camera = new THREE.PerspectiveCamera(mobile ? 68 : 62, innerWidth / innerHeight, 0.1, 500);
 
   return { scene, camera, sun, sky, hemi, ambient };
 }

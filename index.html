@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#0b1026" />
 <title>Sky Stomp — 3D Jump Platformer</title>
 <link rel="stylesheet" href="./styles.css" />
 <script type="importmap">
@@ -33,7 +36,7 @@
     </div>
     <div id="toast" class="toast"></div>
     <div class="hud-row hud-bottom">
-      <div class="hud-card hint">
+      <div class="hud-card hint desktop-only">
         <b>WASD</b> move · <b>Space</b> jump / double jump · <b>Shift</b> dash ·
         <b>Mouse</b> camera · <b>R</b> restart level · <b>P</b> pause
       </div>
@@ -46,7 +49,14 @@
       <p class="sub">A 3D jump platformer with eight kinds of enemies.</p>
       <div id="overlay-body"></div>
       <button id="overlay-btn" class="btn">Start</button>
-      <p class="tiny">Click the canvas to capture the mouse. <b>Esc</b> releases it.</p>
+      <p class="tiny desktop-only">
+        <b>WASD</b> move · <b>Space</b> jump / double jump · <b>Shift</b> dash · <b>P</b> pause · <b>R</b> restart<br />
+        Click the canvas to capture the mouse. <b>Esc</b> releases it.
+      </p>
+      <p class="tiny touch-only">
+        Drag the <b>left half</b> of the screen to move · drag the <b>right half</b> to look around<br />
+        <b>JUMP</b> (tap again in mid-air to double jump, hold for height) · <b>DASH</b> · buttons top-right pause and restart
+      </p>
     </div>
   </div>
 

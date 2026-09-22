@@ -69,19 +69,24 @@ html, body {
 .hint { font-size: 12px; opacity: 0.8; }
 .hint b { color: var(--accent); font-weight: 600; }
 
+/* Pinned to the viewport rather than laid out in the HUD column, so it can
+   never drift down behind the touch buttons on a tall screen. */
 .toast {
-  align-self: center;
-  margin-top: -40vh;
+  position: fixed;
+  left: 50%;
+  top: 24%;
+  max-width: min(680px, calc(100vw - 32px));
+  text-align: center;
   padding: 10px 20px;
   border-radius: 999px;
   background: rgba(11, 18, 38, 0.8);
   border: 1px solid var(--edge);
   font-size: 16px;
   opacity: 0;
-  transform: translateY(8px);
+  transform: translate(-50%, 8px);
   transition: opacity 0.25s ease, transform 0.25s ease;
 }
-.toast.show { opacity: 1; transform: translateY(0); }
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
 
 /* ---------- Overlays ---------- */
 
@@ -171,3 +176,132 @@ html, body {
 
 .stat-line { opacity: 0.8; margin: 0 0 16px; font-size: 14px; }
 .stat-line b { color: var(--accent); }
+
+/* ---------- Touch controls ---------- */
+
+html { -webkit-tap-highlight-color: transparent; }
+
+body.touch { user-select: none; -webkit-user-select: none; }
+
+/* On a phone the control legend lives in the menu, not under your thumbs. */
+body.touch .hud-bottom { display: none; }
+
+/* Leave room at the top right for the pause / restart buttons. */
+body.touch .hud-top { padding-right: 100px; }
+body.touch .desktop-only { display: none; }
+body:not(.touch) .touch-only { display: none; }
+
+#touch-ui {
+  position: fixed;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease;
+  touch-action: none;
+}
+
+#touch-ui.active { opacity: 1; visibility: visible; }
+
+#touch-ui .stick {
+  position: absolute;
+  width: 116px;
+  height: 116px;
+  margin: -58px 0 0 -58px;
+  border-radius: 50%;
+  border: 2px solid rgba(190, 220, 255, 0.5);
+  background: rgba(10, 18, 40, 0.28);
+  backdrop-filter: blur(2px);
+}
+
+#touch-ui .knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(214, 233, 255, 0.72);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  transform: translate(-50%, -50%);
+}
+
+#touch-ui .pad {
+  position: absolute;
+  right: 18px;
+  bottom: 24px;
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+}
+
+#touch-ui .sys {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  display: flex;
+  gap: 8px;
+}
+
+.tbtn {
+  pointer-events: auto;
+  touch-action: none;
+  font: inherit;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #0e1428;
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.38);
+  transition: transform 0.08s ease, filter 0.08s ease;
+}
+
+.tbtn.down { transform: scale(0.92); filter: brightness(1.15); }
+
+.tbtn.jump {
+  width: 104px;
+  height: 104px;
+  font-size: 17px;
+  background: linear-gradient(180deg, #ffe08a, #ffd257);
+}
+
+.tbtn.dash {
+  width: 76px;
+  height: 76px;
+  font-size: 13px;
+  margin-bottom: 12px;
+  background: linear-gradient(180deg, #a9e6ff, #63d2ff);
+}
+
+.tbtn.tiny {
+  width: 42px;
+  height: 42px;
+  font-size: 15px;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--edge);
+}
+
+/* Narrow portrait phones: tighten the HUD so it clears the buttons. */
+@media (max-width: 540px) {
+  #hud { padding: 10px; }
+  .hud-card { padding: 6px 10px; font-size: 13px; }
+  .stats { gap: 12px; }
+  .stat b { font-size: 16px; }
+  .hearts { font-size: 17px; }
+  .panel { padding: 20px 16px; }
+  .panel h1 { font-size: 30px; }
+  .toast { top: 26%; font-size: 14px; padding: 8px 14px; }
+  .bestiary { grid-template-columns: 1fr; }
+}
+
+@media (max-height: 460px) {
+  /* landscape phone: keep the toast clear of the middle of the play area */
+  .toast { top: 13%; font-size: 13px; padding: 6px 14px; max-width: min(520px, calc(100vw - 220px)); }
+  .panel { padding: 14px 16px; }
+  .panel h1 { font-size: 24px; margin-bottom: 2px; }
+  .panel .sub { margin-bottom: 10px; }
+  #touch-ui .tbtn.jump { width: 84px; height: 84px; }
+  #touch-ui .tbtn.dash { width: 62px; height: 62px; font-size: 12px; }
+}

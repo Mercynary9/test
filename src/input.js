@@ -1,7 +1,8 @@
 /** Keyboard + pointer-lock mouse input. */
 export class Input {
-  constructor(canvas) {
+  constructor(canvas, { pointerLock = true } = {}) {
     this.canvas = canvas;
+    this.usePointerLock = pointerLock;
     this.keys = new Set();
     this.pressed = new Set(); // keys that went down since the last consume()
     this.mouseDX = 0;
@@ -28,7 +29,7 @@ export class Input {
     window.addEventListener('blur', () => this.keys.clear());
 
     canvas.addEventListener('click', () => {
-      if (!this.locked) canvas.requestPointerLock?.();
+      if (this.usePointerLock && !this.locked) canvas.requestPointerLock?.();
     });
 
     document.addEventListener('pointerlockchange', () => {

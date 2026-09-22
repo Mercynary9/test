@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { createRenderer, createScene, applyPalette } from './scene.js';
 import { Input } from './input.js';
+import { TouchControls } from './touch.js';
 import { Hud } from './hud.js';
 import { Sfx } from './audio.js';
 import { Fx } from './fx.js';
@@ -16,15 +17,21 @@ const MAX_SUBSTEPS = 8;
 class Game {
   constructor() {
     this.canvas = document.getElementById('game');
-    this.renderer = createRenderer(this.canvas);
+    this.touch = new TouchControls(this.canvas);
+    this.mobile = this.touch.enabled;
+    this.renderer = createRenderer(this.canvas, { mobile: this.mobile });
 
-    const parts = createScene(LEVELS[0].palette);
+    const parts = createScene(LEVELS[0].palette, { mobile: this.mobile });
     this.sceneParts = parts;
     this.scene = parts.scene;
     this.camera = parts.camera;
     this.sun = parts.sun;
 
-    this.input = new Input(this.canvas);
+    this.input = new Input(this.canvas, { pointerLock: !this.mobile });
+    this.touch.onPause = () => (this.state === 'playing' ? this.pause() : this.resume());
+    this.touch.onRestart = () => {
+      if (this.state === 'playing' || this.state === 'paused') this.loadLevel(this.levelIndex);
+    };
     this.hud = new Hud();
     this.sfx = new Sfx();
     this.fx = new Fx(this.scene);
@@ -42,7 +49,10 @@ class Game {
     this.killY = -25;
 
     this.yaw = 0;
-    this.pitch = 0.28;
+    // phones are usually held in portrait, where a flatter camera fills the
+    // screen with sky; look down a little more there
+    this.basePitch = this.mobile ? 0.42 : 0.28;
+    this.pitch = this.basePitch;
     this.camDistance = 11;
     this.camPos = new THREE.Vector3();
     this.camTarget = new THREE.Vector3();
@@ -73,6 +83,7 @@ class Game {
   showMenu() {
     this.state = 'menu';
     this.hud.hide();
+    this.touch.setVisible(false);
     this.hud.showOverlay({
       title: 'Sky Stomp',
       sub: 'A 3D jump platformer. Four levels, eight kinds of enemy.',
@@ -124,7 +135,7 @@ class Game {
 
     // snap the camera behind the player rather than sweeping in from the last level
     this.yaw = 0;
-    this.pitch = 0.28;
+    this.pitch = this.basePitch;
     this.camPos.copy(this.player.pos).add(new THREE.Vector3(0, 4, this.camDistance));
     this.camera.position.copy(this.camPos);
 
@@ -136,7 +147,8 @@ class Game {
 
     this.state = 'playing';
     this.sfx.resume();
-    this.canvas.requestPointerLock?.();
+    this.grabPointer();
+    this.touch.setVisible(true);
   }
 
   refreshHud() {
@@ -153,9 +165,16 @@ class Game {
     return this.enemies.reduce((n, e) => n + (e.alive && e.countsAsThreat ? 1 : 0), 0);
   }
 
+  grabPointer() {
+    if (this.mobile) return; // no pointer lock on phones; touch drives the camera
+    this.canvas.requestPointerLock?.();
+  }
+
   pause() {
     if (this.state !== 'playing') return;
     this.state = 'paused';
+    this.touch.setVisible(false);
+    this.input.release();
     this.hud.showOverlay({
       title: 'Paused',
       sub: `${LEVELS[this.levelIndex].name} — ${this.remainingThreats()} enemies left`,
@@ -172,12 +191,14 @@ class Game {
     this.lastTime = performance.now();
     this.accumulator = 0;
     this.sfx.resume();
-    this.canvas.requestPointerLock?.();
+    this.grabPointer();
+    this.touch.setVisible(true);
   }
 
   completeLevel() {
     if (this.state !== 'playing') return; // touching the star is a one-time event
     this.state = 'complete';
+    this.touch.setVisible(false);
     this.sfx.win();
     this.fx.burst(this.level.goalPos, 0xffd257, 40, { spread: 12, up: 10, life: 1.3 });
     this.fx.ring(this.level.goalPos, 0xffe38a, 9, 0.8);
@@ -440,6 +461,9 @@ class Game {
     const restart = this.input.tapped('KeyR');
     const pauseTapped = this.input.tapped('KeyP');
     const mouse = this.input.consume();
+    const touch = this.touch.read();
+    mouse.dx += touch.lookDX;
+    mouse.dy += touch.lookDY;
 
     if (this.state === 'playing' || this.state === 'paused') {
       if (restart) {
@@ -447,17 +471,19 @@ class Game {
         return;
       }
       if (pauseTapped) {
-        if (this.state === 'playing') { this.input.release(); this.pause(); } else this.resume();
+        if (this.state === 'playing') this.pause();
+        else this.resume();
       }
     }
 
     if (this.state === 'playing') {
+      const clamp1 = (n) => THREE.MathUtils.clamp(n, -1, 1);
       const intent = {
-        forward: (this.input.down('KeyW') ? 1 : 0) - (this.input.down('KeyS') ? 1 : 0),
-        right: (this.input.down('KeyD') ? 1 : 0) - (this.input.down('KeyA') ? 1 : 0),
-        jumpTapped,
-        jumpHeld: this.input.down('Space'),
-        dashTapped,
+        forward: clamp1((this.input.down('KeyW') ? 1 : 0) - (this.input.down('KeyS') ? 1 : 0) + touch.moveY),
+        right: clamp1((this.input.down('KeyD') ? 1 : 0) - (this.input.down('KeyA') ? 1 : 0) + touch.moveX),
+        jumpTapped: jumpTapped || touch.jumpTapped,
+        jumpHeld: this.input.down('Space') || touch.jumpHeld,
+        dashTapped: dashTapped || touch.dashTapped,
         yaw: this.yaw,
       };
 
