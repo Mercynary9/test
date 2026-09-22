@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 import { geo, mat } from './scene.js';
+import { MOBILE_TIER } from './touch.js';
 
 /** Pooled cube-confetti bursts and expanding shock rings. */
 export class Fx {
-  constructor(scene, limit = 260) {
+  constructor(scene, limit = MOBILE_TIER ? 130 : 260) {
     this.scene = scene;
     this.limit = limit;
     this.bits = [];

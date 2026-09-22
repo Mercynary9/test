@@ -1,4 +1,10 @@
-/** Keyboard + pointer-lock mouse input. */
+import { IS_TOUCH } from './touch.js';
+
+/**
+ * Keyboard + pointer-lock mouse input, for playing on a desktop. On a touch
+ * device the pointer-lock plumbing is skipped entirely — a tap on the canvas
+ * there belongs to the on-screen controls in touch.js.
+ */
 export class Input {
   constructor(canvas) {
     this.canvas = canvas;
@@ -27,19 +33,21 @@ export class Input {
     window.addEventListener('keyup', (e) => this.keys.delete(e.code));
     window.addEventListener('blur', () => this.keys.clear());
 
-    canvas.addEventListener('click', () => {
-      if (!this.locked) canvas.requestPointerLock?.();
-    });
+    if (!IS_TOUCH) {
+      canvas.addEventListener('click', () => {
+        if (!this.locked) canvas.requestPointerLock?.();
+      });
 
-    document.addEventListener('pointerlockchange', () => {
-      this.locked = document.pointerLockElement === canvas;
-    });
+      document.addEventListener('pointerlockchange', () => {
+        this.locked = document.pointerLockElement === canvas;
+      });
 
-    document.addEventListener('mousemove', (e) => {
-      if (!this.locked) return;
-      this.mouseDX += e.movementX * this.sensitivity;
-      this.mouseDY += e.movementY * this.sensitivity;
-    });
+      document.addEventListener('mousemove', (e) => {
+        if (!this.locked) return;
+        this.mouseDX += e.movementX * this.sensitivity;
+        this.mouseDY += e.movementY * this.sensitivity;
+      });
+    }
   }
 
   down(...codes) {
@@ -60,7 +68,12 @@ export class Input {
     return { dx, dy };
   }
 
+  /** Ask for the mouse; a no-op on touch devices. */
+  capture(canvas) {
+    if (!IS_TOUCH) canvas.requestPointerLock?.();
+  }
+
   release() {
-    document.exitPointerLock?.();
+    if (!IS_TOUCH) document.exitPointerLock?.();
   }
 }

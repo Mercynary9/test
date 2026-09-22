@@ -1,14 +1,39 @@
 import * as THREE from 'three';
+import { MOBILE_TIER } from './touch.js';
+
+/** The pixel-ratio ceiling: phone GPUs cannot afford a 3x framebuffer. */
+export const MAX_PIXEL_RATIO = MOBILE_TIER ? 1.5 : 2;
 
 export function createRenderer(canvas) {
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  const renderer = new THREE.WebGLRenderer({
+    canvas,
+    // MSAA is the first thing to go on a phone; the dynamic resolution scaler
+    // in main.js keeps the framebuffer honest instead.
+    antialias: !MOBILE_TIER,
+    powerPreference: 'high-performance',
+  });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, MAX_PIXEL_RATIO));
   renderer.setSize(innerWidth, innerHeight, false);
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.type = MOBILE_TIER ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
   return renderer;
+}
+
+/**
+ * Keep the *horizontal* field of view fixed so a portrait phone sees as much of
+ * the level to either side as a landscape one. three.js `fov` is vertical, so it
+ * has to be derived from the aspect ratio on every resize and rotation.
+ */
+const H_FOV = THREE.MathUtils.degToRad(80);
+
+export function fovForAspect(aspect) {
+  const vertical = 2 * Math.atan(Math.tan(H_FOV * 0.5) / Math.max(0.35, aspect));
+  // A phone in portrait would need a fisheye 120 degrees to hold the same
+  // horizontal span, so the vertical angle is capped: portrait trades width for
+  // a taller view, which is the useful half for a platformer anyway.
+  return THREE.MathUtils.clamp(THREE.MathUtils.radToDeg(vertical), 54, 74);
 }
 
 const SKY_VERT = /* glsl */ `
@@ -43,7 +68,9 @@ function createSky(palette) {
       bottom: { value: new THREE.Color(palette.skyBottom) },
     },
   });
-  const sky = new THREE.Mesh(new THREE.SphereGeometry(400, 32, 16), material);
+  // Smaller than the camera's far plane, which is pulled in on mobile.
+  const radius = MOBILE_TIER ? 280 : 400;
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(radius, MOBILE_TIER ? 24 : 32, MOBILE_TIER ? 12 : 16), material);
   sky.frustumCulled = false;
   return sky;
 }
@@ -65,10 +92,13 @@ export function createScene(palette) {
   const sun = new THREE.DirectionalLight(palette.sun, 2.0);
   sun.position.set(24, 42, 18);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
+  // A 1024 map over a tighter frustum costs a quarter of the fill and, because
+  // the frustum follows the player, looks no softer on a phone-sized screen.
+  const shadowRes = MOBILE_TIER ? 1024 : 2048;
+  sun.shadow.mapSize.set(shadowRes, shadowRes);
   sun.shadow.camera.near = 1;
   sun.shadow.camera.far = 160;
-  const s = 60;
+  const s = MOBILE_TIER ? 38 : 60;
   sun.shadow.camera.left = -s;
   sun.shadow.camera.right = s;
   sun.shadow.camera.top = s;
@@ -78,7 +108,8 @@ export function createScene(palette) {
   scene.add(sun);
   scene.add(sun.target);
 
-  const camera = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, 0.1, 500);
+  const aspect = innerWidth / innerHeight;
+  const camera = new THREE.PerspectiveCamera(fovForAspect(aspect), aspect, 0.1, MOBILE_TIER ? 340 : 500);
 
   return { scene, camera, sun, sky, hemi, ambient };
 }
