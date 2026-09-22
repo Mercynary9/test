@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>Sky Stomp — 3D Jump Platformer</title>
+<link rel="stylesheet" href="./styles.css" />
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+  }
+}
+</script>
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <div id="hud" class="hidden">
+    <div class="hud-row hud-top">
+      <div class="hud-card">
+        <div id="hearts" class="hearts"></div>
+      </div>
+      <div class="hud-card" id="level-card">
+        <span class="label">Level</span>
+        <span id="level-name">—</span>
+      </div>
+      <div class="hud-card stats">
+        <span class="stat"><b id="coins">0</b><span class="label">coins</span></span>
+        <span class="stat"><b id="enemies-left">0</b><span class="label">enemies</span></span>
+        <span class="stat"><b id="deaths">0</b><span class="label">falls</span></span>
+      </div>
+    </div>
+    <div id="toast" class="toast"></div>
+    <div class="hud-row hud-bottom">
+      <div class="hud-card hint">
+        <b>WASD</b> move · <b>Space</b> jump / double jump · <b>Shift</b> dash ·
+        <b>Mouse</b> camera · <b>R</b> restart level · <b>P</b> pause
+      </div>
+    </div>
+  </div>
+
+  <div id="overlay" class="overlay">
+    <div class="panel">
+      <h1>Sky Stomp</h1>
+      <p class="sub">A 3D jump platformer with eight kinds of enemies.</p>
+      <div id="overlay-body"></div>
+      <button id="overlay-btn" class="btn">Start</button>
+      <p class="tiny">Click the canvas to capture the mouse. <b>Esc</b> releases it.</p>
+    </div>
+  </div>
+
+  <div id="loading" class="overlay">
+    <div class="panel"><h1>Loading…</h1><p class="sub">Fetching three.js</p></div>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

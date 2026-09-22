@@ -1,0 +1,173 @@
+:root {
+  --ink: #f2f6ff;
+  --card: rgba(11, 18, 38, 0.62);
+  --edge: rgba(150, 190, 255, 0.28);
+  --accent: #ffd257;
+  --danger: #ff5d6c;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #0b1026;
+  color: var(--ink);
+  font-family: "Segoe UI", Inter, system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+#game { display: block; width: 100vw; height: 100vh; touch-action: none; }
+
+.hidden { display: none !important; }
+
+/* ---------- HUD ---------- */
+
+#hud {
+  position: fixed;
+  inset: 0;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.hud-row { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+.hud-bottom { justify-content: center; }
+
+.hud-card {
+  background: var(--card);
+  border: 1px solid var(--edge);
+  border-radius: 12px;
+  padding: 8px 14px;
+  backdrop-filter: blur(6px);
+  font-size: 14px;
+  line-height: 1.4;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.32);
+}
+
+#level-card { margin-right: auto; display: flex; gap: 8px; align-items: baseline; }
+
+.label {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.stats { display: flex; gap: 18px; }
+.stat { display: flex; flex-direction: column; align-items: center; line-height: 1.1; }
+.stat b { font-size: 18px; color: var(--accent); }
+
+.hearts { display: flex; gap: 6px; font-size: 20px; line-height: 1; }
+.heart { filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5)); }
+.heart.empty { opacity: 0.25; filter: grayscale(1); }
+
+.hint { font-size: 12px; opacity: 0.8; }
+.hint b { color: var(--accent); font-weight: 600; }
+
+.toast {
+  align-self: center;
+  margin-top: -40vh;
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: rgba(11, 18, 38, 0.8);
+  border: 1px solid var(--edge);
+  font-size: 16px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* ---------- Overlays ---------- */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: radial-gradient(120% 120% at 50% 0%, rgba(58, 96, 190, 0.45), rgba(6, 9, 22, 0.93));
+  backdrop-filter: blur(3px);
+}
+.overlay.hidden { display: none; }
+
+.panel {
+  width: min(640px, 100%);
+  max-height: 88vh;
+  overflow: auto;
+  text-align: center;
+  background: rgba(10, 16, 36, 0.86);
+  border: 1px solid var(--edge);
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+.panel h1 {
+  margin: 0 0 6px;
+  font-size: 40px;
+  letter-spacing: -0.02em;
+  background: linear-gradient(100deg, #ffd257, #ff7bd5 60%, #7bb6ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.panel .sub { margin: 0 0 18px; opacity: 0.75; }
+.panel .tiny { font-size: 11px; opacity: 0.5; margin: 14px 0 0; }
+
+.btn {
+  margin-top: 6px;
+  padding: 12px 34px;
+  font: inherit;
+  font-weight: 600;
+  font-size: 16px;
+  color: #10152c;
+  background: linear-gradient(180deg, #ffe08a, var(--accent));
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(255, 210, 87, 0.28);
+}
+.btn:hover { filter: brightness(1.06); }
+.btn:active { transform: translateY(1px); }
+
+/* Enemy bestiary */
+
+.bestiary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px;
+  text-align: left;
+  margin: 0 0 18px;
+}
+.bestiary .row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 8px 10px;
+  border: 1px solid var(--edge);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 12.5px;
+}
+.bestiary .dot {
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  box-shadow: 0 0 10px currentColor;
+  background: currentColor;
+}
+.bestiary .name { font-weight: 600; display: block; }
+.bestiary .desc { opacity: 0.72; }
+
+.stat-line { opacity: 0.8; margin: 0 0 16px; font-size: 14px; }
+.stat-line b { color: var(--accent); }
